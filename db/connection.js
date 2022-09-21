@@ -9,7 +9,7 @@ const db = mysql.createConnection(
         user: 'root',
         // MySQL password
         password: process.env.KEY,
-        database: 'election',
+        database: 'employees',
     },
     console.log('Connected to the employee database.')
 );

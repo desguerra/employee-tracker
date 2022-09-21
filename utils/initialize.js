@@ -22,23 +22,7 @@ const questions = [
 ];
 
 class Init {
-    constructor() {
-        // FIXME: how to initialize these instead of hardcoding them idk ??????
-        this.departments = ['Engineering', 'Finance', 'Legal', 'Sales'];
-        this.roles = [
-            'Sales Lead', 
-            'Salesperson', 
-            'Lead Engineer', 
-            'Software Engineer', 
-            'Account Manager', 
-            'Accountant', 
-            'Legal Team Lead', 
-            'Lawyer'
-        ];
-        this.employees = [
-
-        ];
-    }
+    constructor() {}
 
     promptUser() {
         inquirer
@@ -129,8 +113,7 @@ class Init {
             ])
 
             .then(({ newDepartment }) => {
-                const sql = `INSERT INTO department (name)
-                    VALUES (?)`;
+                const sql = `INSERT INTO department (name) VALUES (?)`;
 
                 const params = [newDepartment];
 
@@ -138,13 +121,28 @@ class Init {
                 
                 db.query(sql, params, (err, rows) => {
                     console.log(`Added ${params} to the database.`);
+                    // console.log({rows});
+                    // console.log({err});
                     this.promptUser();
                 });
             });
     }
 
     addRole() {
-        inquirer
+
+        const sql = `SELECT * FROM department`;
+
+        db.query(sql, (err, rows) => {
+
+            const departmentChoices = rows.map(({ id, name }) => (
+                name
+            ));
+
+            const departmentIDs = rows.map(({ id, name }) => (
+                id
+            ));
+
+            inquirer
             .prompt([
                 {
                     type: 'input',
@@ -156,11 +154,11 @@ class Init {
                     name: 'newRoleSalary',
                     message: 'What is the salary of the role?',
                 },
-                { // FIXME: make department choice options dynamic instead of hardcoding? !!!!!!!
+                {
                     type: 'list',
                     name: 'newRoleDepartment',
                     message: 'Which department does this role belong to?',
-                    choices: this.departments,
+                    choices: departmentChoices,
                 },
             ])
 
@@ -168,19 +166,42 @@ class Init {
                 const sql = `INSERT INTO role (title, salary, department_id)
                     VALUES (?,?,?)`;
 
-                // TODO: turn department into their corresponding number to match db params?????
-
-                const params = [newRole, newRoleSalary, newRoleDepartment];
+                const params = [newRole, newRoleSalary, departmentIDs[departmentChoices.indexOf(newRoleDepartment)]];
                 
                 db.query(sql, params, (err, rows) => {
-                    console.log(`Added ${params} to the database.`);
+                    console.log(`Added ${newRole} to the database.`);
                     this.promptUser();
                 });
             });
+        });
+
     }
 
     addEmployee() {
-        inquirer
+
+        const sql = `SELECT e.id, e.first_name, e.last_name,
+            role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+            FROM employee e
+            LEFT JOIN employee m
+            ON e.manager_id = m.id
+            LEFT JOIN role
+            ON e.role_id = role.id
+            LEFT JOIN department
+            ON role.department_id = department.id`;
+
+        db.query(sql, (err, rows) => {
+
+            console.log(rows);
+
+            const roleNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+                title
+            ));
+
+            const managerNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+                first_name + ' ' + last_name
+            ));
+
+            inquirer
             .prompt([
                 {
                     type: 'input',
@@ -192,87 +213,89 @@ class Init {
                     name: 'newLastName',
                     message: 'What is the employee\'s last name?',
                 },
-                { // FIXME: role choices list!!!!!!!!!
+                {
                     type: 'list',
                     name: 'newEmpRole',
                     message: 'What is the employee\'s role?',
-                    choices: [
-                        'Sales Lead',
-                        'Salesperson',
-                        'Lead Engineer',
-                        'Software Engineer',
-                        'Account Manager',
-                        'Accountant',
-                        'Legal Team Lead',
-                        'Lawyer'
-                    ],
+                    choices: roleNames
                 },
-                { // FIXME: manager choices list!!!!!!!!!
+                {
                     type: 'list',
                     name: 'newEmpManager',
                     message: 'Who is the employee\'s manager?',
-                    choices: [
-                        'Person1',
-                        'Person2',
-                        'Person3'
-                    ],
+                    choices: managerNames
                 },
             ])
 
-            .then(({ newRole, newRoleSalary, newRoleDepartmentId }) => {
-                const sql = `INSERT INTO role (title, salary, department_id)
+            .then(({ newFirstName, newLastName, newEmpRole, newEmpManager }) => {
+                const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
                     VALUES (?,?,?)`;
 
-                const params = [newRole, newRoleSalary, newRoleDepartmentId];
+                // FIXME: turn role and manager into their corresponding number to match db params?????
+
+                const params = [newFirstName, newLastName, newEmpRole, newEmpManager];
                 
                 db.query(sql, params, (err, rows) => {
                     // console.log(`Added ${params} to the database.`);
 
-                    // TODO: turn role and manager into their corresponding number to match db params?????
-
                     this.promptUser();
                 });
             });
+        });
+
+        
     }
 
     updateEmployeeRole() {
-        inquirer
+
+        const sql = `SELECT e.id, e.first_name, e.last_name,
+            role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+            FROM employee e
+            LEFT JOIN employee m
+            ON e.manager_id = m.id
+            LEFT JOIN role
+            ON e.role_id = role.id
+            LEFT JOIN department
+            ON role.department_id = department.id`;
+
+        db.query(sql, (err, rows) => {
+
+            const roleNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+                title
+            ));
+
+            const employeeNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+                first_name + ' ' + last_name
+            ));
+
+            const employeeIDs = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+                id
+            ));
+
+            inquirer
             .prompt([
-                { // FIXME: employee choices list!!!!!!!!!
+                {
                     type: 'list',
                     name: 'updateEmp',
                     message: 'Which employee\'s role do you want to update?',
-                    choices: [
-                        'emp1',
-                        'emp2',
-                        'emp3'
-                    ]
+                    choices: employeeNames
                 },
-                { // FIXME: role choices list!!!!!!!!!
+                {
                     type: 'list',
                     name: 'updateRole',
                     message: 'Which role do you want to assign the selected employee?',
-                    choices: [
-                        'Sales Lead',
-                        'Salesperson',
-                        'Lead Engineer',
-                        'Software Engineer',
-                        'Account Manager',
-                        'Accountant',
-                        'Legal Team Lead',
-                        'Lawyer'
-                    ],
+                    choices: roleNames
                 }
             ])
 
             .then(({ updateEmp, updateRole }) => {
-                // TODO: TEST !!!!!!
                 console.log('test updateEmployeeRole()');
 
                 const sql = `UPDATE employee SET role_id = ?
                     WHERE id = ?`;
 
-                const params = [updateRole, updateEmp];
+                // FIXME: turn role to role id
+                const params = [updateRole, employeeIDs[employeeNames.indexOf(updateEmp)]];
                 
                 db.query(sql, params, (err, rows) => {
                     // console.log(`Updated ${params}.`);
@@ -280,6 +303,7 @@ class Init {
                     this.promptUser();
                 });
             });
+        });
     }
 }
 
