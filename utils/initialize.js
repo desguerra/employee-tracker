@@ -230,13 +230,14 @@ class Init {
                 const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
                     VALUES (?,?,?,?)`;
 
-                console.log(managerIDs[managerNames.indexOf(newEmpManager)]);
+                // FIXME: FIX ROLES??????????? if role already exists, do not add to role names!!!!!!!!! how to not repeat role names?
+                // ----> GET ROLES FROM ROLE TABLE, NOT ROLES FROM EMPLOYEE TABLE!!!!!!!!!!!!!!!!!!!!!!!
 
                 const params = [newFirstName, newLastName, roleIDs[roleNames.indexOf(newEmpRole)], managerIDs[managerNames.indexOf(newEmpManager)]];
                 
                 db.query(sql, params, (err, rows) => {
-                    // console.log(`Added ${params} to the database.`);
-                    console.log({err});
+                    console.log(`Added ${newFirstName} ${newLastName} to the database.`);
+                    // console.log({err});
 
                     this.promptUser();
                 });
@@ -297,9 +298,9 @@ class Init {
                 const sql = `UPDATE employee SET role_id = ?
                     WHERE id = ?`;
 
-                console.log(roleIDs[roleNames.indexOf(updateRole)]);
+                //console.log(roleIDs[roleNames.indexOf(updateRole)]);
 
-                // FIXME: DO NOT OVERWRITE OLD ROLES??? MAKE COPY OF ARRAY???????
+                // FIXME: DO NOT OVERWRITE OLD ROLES??? MAKE COPY OF ROLENAMES ARRAY???????
                 const params = [roleIDs[roleNames.indexOf(updateRole)], employeeIDs[employeeNames.indexOf(updateEmp)]];
                 
                 db.query(sql, params, (err, rows) => {
