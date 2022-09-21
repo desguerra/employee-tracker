@@ -36,14 +36,9 @@ class Init {
     checkAction(act) {
         let action = act.toLowerCase();
 
-
-
         if (action === 'quit') {
-
-            // FIXME: ON EXIT //
             console.log('Quitting application... bye for now!');
-            return;
-
+            process.exit();
         } else if (action === 'view all employees') {
             this.viewAllEmployees();
         } else if (action === 'add employee') {
@@ -116,8 +111,6 @@ class Init {
                 const sql = `INSERT INTO department (name) VALUES (?)`;
 
                 const params = [newDepartment];
-
-                this.departments.push(params);
                 
                 db.query(sql, params, (err, rows) => {
                     console.log(`Added ${params} to the database.`);
@@ -179,7 +172,7 @@ class Init {
 
     addEmployee() {
 
-        const sql = `SELECT e.id, e.first_name, e.last_name,
+        const sql = `SELECT e.id, e.first_name, e.last_name, role.id AS role_id,
             role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
             FROM employee e
             LEFT JOIN employee m
@@ -191,14 +184,20 @@ class Init {
 
         db.query(sql, (err, rows) => {
 
-            console.log(rows);
-
-            const roleNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+            const roleNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 title
             ));
 
-            const managerNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+            const roleIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+                role_id
+            ));
+
+            const managerNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 first_name + ' ' + last_name
+            ));
+
+            const managerIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+                id
             ));
 
             inquirer
@@ -229,14 +228,15 @@ class Init {
 
             .then(({ newFirstName, newLastName, newEmpRole, newEmpManager }) => {
                 const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
-                    VALUES (?,?,?)`;
+                    VALUES (?,?,?,?)`;
 
-                // FIXME: turn role and manager into their corresponding number to match db params?????
+                console.log(managerIDs[managerNames.indexOf(newEmpManager)]);
 
-                const params = [newFirstName, newLastName, newEmpRole, newEmpManager];
+                const params = [newFirstName, newLastName, roleIDs[roleNames.indexOf(newEmpRole)], managerIDs[managerNames.indexOf(newEmpManager)]];
                 
                 db.query(sql, params, (err, rows) => {
                     // console.log(`Added ${params} to the database.`);
+                    console.log({err});
 
                     this.promptUser();
                 });
@@ -248,7 +248,7 @@ class Init {
 
     updateEmployeeRole() {
 
-        const sql = `SELECT e.id, e.first_name, e.last_name,
+        const sql = `SELECT e.id, e.first_name, e.last_name, role.id AS role_id,
             role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
             FROM employee e
             LEFT JOIN employee m
@@ -260,15 +260,19 @@ class Init {
 
         db.query(sql, (err, rows) => {
 
-            const roleNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+            const roleNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 title
             ));
 
-            const employeeNames = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+            const roleIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+                role_id
+            ));
+
+            const employeeNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 first_name + ' ' + last_name
             ));
 
-            const employeeIDs = rows.map(({ id, first_name, last_name, title, department, salary, manager }) => (
+            const employeeIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 id
             ));
 
@@ -289,16 +293,16 @@ class Init {
             ])
 
             .then(({ updateEmp, updateRole }) => {
-                console.log('test updateEmployeeRole()');
 
                 const sql = `UPDATE employee SET role_id = ?
                     WHERE id = ?`;
 
-                // FIXME: turn role to role id
-                const params = [updateRole, employeeIDs[employeeNames.indexOf(updateEmp)]];
+                console.log(roleIDs[roleNames.indexOf(updateRole)]);
+
+                // FIXME: DO NOT OVERWRITE OLD ROLES??? MAKE COPY OF ARRAY???????
+                const params = [roleIDs[roleNames.indexOf(updateRole)], employeeIDs[employeeNames.indexOf(updateEmp)]];
                 
                 db.query(sql, params, (err, rows) => {
-                    // console.log(`Updated ${params}.`);
 
                     this.promptUser();
                 });
