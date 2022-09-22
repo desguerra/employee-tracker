@@ -177,29 +177,28 @@ class Init {
         FROM employee e
         LEFT JOIN employee m
         ON e.manager_id = m.id
-        CROSS JOIN role
+        RIGHT JOIN role
+        ON e.role_id = role.id
         LEFT JOIN department
         ON role.department_id = department.id`;
 
         db.query(sql, (err, rows) => {
 
-            // FIXME: FIX MANAGER OPTIONS TO INCLUDE NULL OPTION
-
             const roleNames = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 title
             )))];
 
-            const roleIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const roleIDs = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 role_id
-            ));
+            )))];
 
             const managerNames = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 first_name + ' ' + last_name
             )))];
 
-            const managerIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const managerIDs = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 id
-            ));
+            )))];
 
             inquirer
             .prompt([
@@ -231,6 +230,10 @@ class Init {
                 const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
                     VALUES (?,?,?,?)`;
 
+                /* console.log(newEmpManager);
+                console.log(managerNames.indexOf(newEmpManager));
+                console.log(managerIDs[managerNames.indexOf(newEmpManager)]); */
+
                 const params = [newFirstName, newLastName, roleIDs[roleNames.indexOf(newEmpRole)], managerIDs[managerNames.indexOf(newEmpManager)]];
                 
                 db.query(sql, params, (err, rows) => {
@@ -252,7 +255,8 @@ class Init {
             FROM employee e
             LEFT JOIN employee m
             ON e.manager_id = m.id
-            CROSS JOIN role
+            RIGHT JOIN role
+            ON e.role_id = role.id
             LEFT JOIN department
             ON role.department_id = department.id`;
 
@@ -262,17 +266,17 @@ class Init {
                 title
             )))];
 
-            const roleIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const roleIDs = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 role_id
-            ));
+            )))];
 
-            const employeeNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const employeeNames = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 first_name + ' ' + last_name
-            ));
+            )))];
 
-            const employeeIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const employeeIDs = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 id
-            ));
+            )))];
 
             inquirer
             .prompt([
