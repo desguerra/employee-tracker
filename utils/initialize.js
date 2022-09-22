@@ -173,28 +173,29 @@ class Init {
     addEmployee() {
 
         const sql = `SELECT e.id, e.first_name, e.last_name, role.id AS role_id,
-            role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
-            FROM employee e
-            LEFT JOIN employee m
-            ON e.manager_id = m.id
-            LEFT JOIN role
-            ON e.role_id = role.id
-            LEFT JOIN department
-            ON role.department_id = department.id`;
+        role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+        FROM employee e
+        LEFT JOIN employee m
+        ON e.manager_id = m.id
+        CROSS JOIN role
+        LEFT JOIN department
+        ON role.department_id = department.id`;
 
         db.query(sql, (err, rows) => {
 
-            const roleNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            // FIXME: FIX MANAGER OPTIONS TO INCLUDE NULL OPTION
+
+            const roleNames = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 title
-            ));
+            )))];
 
             const roleIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 role_id
             ));
 
-            const managerNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const managerNames = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 first_name + ' ' + last_name
-            ));
+            )))];
 
             const managerIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 id
@@ -222,16 +223,13 @@ class Init {
                     type: 'list',
                     name: 'newEmpManager',
                     message: 'Who is the employee\'s manager?',
-                    choices: managerNames
+                    choices: ['None'].concat(managerNames)
                 },
             ])
 
             .then(({ newFirstName, newLastName, newEmpRole, newEmpManager }) => {
                 const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
                     VALUES (?,?,?,?)`;
-
-                // FIXME: FIX ROLES??????????? if role already exists, do not add to role names!!!!!!!!! how to not repeat role names?
-                // ----> GET ROLES FROM ROLE TABLE, NOT ROLES FROM EMPLOYEE TABLE!!!!!!!!!!!!!!!!!!!!!!!
 
                 const params = [newFirstName, newLastName, roleIDs[roleNames.indexOf(newEmpRole)], managerIDs[managerNames.indexOf(newEmpManager)]];
                 
@@ -254,16 +252,15 @@ class Init {
             FROM employee e
             LEFT JOIN employee m
             ON e.manager_id = m.id
-            LEFT JOIN role
-            ON e.role_id = role.id
+            CROSS JOIN role
             LEFT JOIN department
             ON role.department_id = department.id`;
 
         db.query(sql, (err, rows) => {
 
-            const roleNames = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
+            const roleNames = [... new Set(rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 title
-            ));
+            )))];
 
             const roleIDs = rows.map(({ id, first_name, last_name, role_id, title, department, salary, manager }) => (
                 role_id
@@ -298,9 +295,6 @@ class Init {
                 const sql = `UPDATE employee SET role_id = ?
                     WHERE id = ?`;
 
-                //console.log(roleIDs[roleNames.indexOf(updateRole)]);
-
-                // FIXME: DO NOT OVERWRITE OLD ROLES??? MAKE COPY OF ROLENAMES ARRAY???????
                 const params = [roleIDs[roleNames.indexOf(updateRole)], employeeIDs[employeeNames.indexOf(updateEmp)]];
                 
                 db.query(sql, params, (err, rows) => {
