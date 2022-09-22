@@ -4,7 +4,7 @@
 
 This project is an **employee tracker** that uses **Node.js**, **Inquirer**, and **MySQL**. This command-line application is a **content management system (CMS)** that can be used to manage a company's employee database.
 
-[Click HERE to view the project demonstration video!]() !!!!!!!!!!!!!
+[Click HERE to view the project demonstration video!](https://drive.google.com/file/d/1qy88QYFm1XA4TYvTYjhYET3Ch682wdjK/view)
 
 ## Table of Contents
 
